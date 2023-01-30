@@ -16,8 +16,11 @@
   #wrapper {
     @apply min-h-screen flex flex-col;
   }
+  #wrapper main {
+    @apply grow;
+  }
   #wrapper main.normal {
-    @apply grow flex flex-col justify-center items-center;
+    @apply flex flex-col justify-center items-center;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold font-['Coolvetica'];

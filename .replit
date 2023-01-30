@@ -1,4 +1,4 @@
 run = "yarn start"
-entry-point = "index.js"
+entrypoint = "index.js"
 [nix]
 channel = "stable-22_11"
