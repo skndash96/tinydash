@@ -60,7 +60,7 @@
         state.disabled = false;
       });
       
-      function setDisplayName() {
+      async function setDisplayName() {
         try {
           const newName = "TheGuyWhoNeedsAName" + (new Array(4)).fill().map(() => Math.floor(Math.random() * 10)).join("");
           await updateProfile(u, {
