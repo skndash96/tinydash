@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, ::before, ::after {
+    @apply m-0 p-0 box-border;
+  }
+  html {
+    @apply scroll-smooth;
+    font-size: calc(0.7rem + 0.7vw);
+  }
+  body {
+    @apply overflow-x-hidden font-sans;
+  }
+  #wrapper {
+    @apply min-h-screen flex flex-col;
+  }
+  #wrapper main.normal {
+    @apply grow flex flex-col justify-center items-center;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold font-['Coolvetica'];
+  }
+  h1 {
+    @apply text-4xl;
+  }
+  h2 {
+    @apply text-2xl;
+  }
+  h3 {
+    @apply text-xl;
+  }
+  h4 {
+    @apply text-lg;
+  }
+  h5, p {
+    @apply text-base;
+  }
+  h6 {
+    @apply text-sm;
+  }
+  span {
+    font-size: inherit;
+  }
+}
+
+@layer components {
+  nav {
+    @apply p-0 max-h-0;
+  }
+  nav.open {
+    @apply p-4 max-h-screen;
+  }
+  div.icon, button.icon {
+    @apply mr-2 w-4 h-4 inline-block;
+  }
+  div.icon svg, button.icon svg {
+    @apply w-full h-full fill-current;
+  }
+}
+
+@layer utilities {
+}
+
+@font-face {
+  font-family: "Coolvetica", Helvetica, trebuchet-ms, Arial, Verdana, Montserrat, sans-serif;
+  src: url("fonts/coolvetica.otf");
+}

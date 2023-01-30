@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/out.css" />
+  </head>
+  <body>
+    <div id="wrapper">
+      <%- components.header.html %>
+      
+      <main class="px-8 py-24 bg-slate-700 text-gray-50 normal">
+        <h2>
+          404 | Page Not Found
+        </h2>
+        <div class="mt-4">
+          <a href="/" class="text-sky-300 underline">Go Home</a> or stay here as long as you can ;)
+        </div>
+      </main>
+
+      <%- components.footer.html %>
+    </div>
+    
+    <script type="module">
+      import { createApp } from "https://unpkg.com/petite-vue?module";
+      <%- components.header.js %>
+    </script>
+  </body>
+</html>

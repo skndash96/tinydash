@@ -1,0 +1,27 @@
+<header id="header" class="sticky grid text-gray-50">
+  <div class="px-1 py-0.5 flex justify-between bg-red-400">
+    <h2 class="font-bold"> Tinydash </h2>
+    <button v-if="store" @click="toggleNav()" v-text="isOpen ? 'CLOSE' : 'MENU'"></button>
+  </div>
+  <nav v-if="store" :class="{'open': isOpen}" class="flex flex-col justify-end items-end gap-2 overflow-hidden transition-all bg-slate-900">
+    <a class="hover:underline" href="#">
+      <div class="icon"> <%-include("../icons/gear.svg")%> </div> Dashboard
+    </a>
+    <a v-if="store.signed" class="hover:underline" href="#">
+      <div class="icon"> <%-include("../icons/user.svg")%> </div> {{ store.user.name }}
+    </a>
+    <a v-show="!store.signed" class="hover:underline" href="/auth">
+      <div class="icon"> <%-include("../icons/user-tag.svg")%> </div> Signup
+    </a>
+  </nav>
+</header>
+
+<script>
+  createApp({
+    store: typeof(store) === "object" ? store : null,
+    isOpen: false,
+    toggleNav() {
+      this.isOpen = !this.isOpen;
+    }
+  }).mount("#header");
+</script>

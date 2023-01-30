@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/out.css" />
+  </head>
+  <body>
+    <div id="wrapper">
+      <%- components.header.html %>
+      
+      <main id="auth" class="normal">
+        <form @submit.prevent="handleSubmit()" class="mx-4 my-8 w-[70vw] max-w-lg grid gap-2">
+          <h2 v-text="isLogin ? 'Login' : 'Register'" class="text-center"></h2>
+          
+          <div class="flex flex-col items-stretch">
+            <label>Email:</label>
+            <input v-model="email" class="px-2 py-1 outline-none border-blue-500 focus:border-2 bg-slate-600 text-gray-100" placeholder="Type in your email" type="email" required/>
+          </div>
+          <div class="flex flex-col items-stretch">
+            <label>Password:</label>
+            <input v-model="password" class="px-2 py-1 outline-none border-blue-500 focus:border-2 bg-slate-600 text-gray-100" placeholder="Type in your password" type="password" required/>
+          </div>
+          <div v-show="!isLogin" class="flex flex-col items-stretch">
+            <label>Confirm Password:</label>
+            <input v-model="_password" class="px-2 py-1 outline-none border-blue-500 focus:border-2 bg-slate-600 text-gray-100" placeholder="Type in your password again." type="password"/>
+          </div>
+          
+          <p v-text="status" class="text-center"></p>
+          
+          <button class="px-2 py-1 text-gray-50 bg-rose-500 disabled:opacity-50" type="submit" :disabled="state.disabled">
+            <div class="mr-2 icon"><%-include("icons/user.svg")%></div>
+            <span v-text="isLogin ? 'Login' : 'Sign Up'"></span>
+          </button>
+          
+          <button @click="toggleMethod()" v-text="isLogin ? 'Yet to register?' : 'Registered Already?'" class="text-right text-blue-400 hover:underline" type="button"></button>
+        </form>
+      </main>
+
+      <%- components.footer.html %>
+    </div>
+    
+    <script type="module">
+      import { auth, onAuthStateChanged, linkWithCredential, EmailAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "./scripts/firebase.js";
+      import { createApp, reactive } from "https://unpkg.com/petite-vue?module";
+
+      <%- components.header.js %>
+
+      const state = reactive({
+        disabled: true
+      });
+      
+      onAuthStateChanged(auth, async u => {
+        if (u && !u.isAnonymous) {
+          if (!u.displayName) {
+            await setDisplayName();
+          }
+          window.location.replace("/");
+        }
+        
+        state.disabled = false;
+      });
+      
+      function setDisplayName() {
+        try {
+          const newName = "TheGuyWhoNeedsAName" + (new Array(4)).fill().map(() => Math.floor(Math.random() * 10)).join("");
+          await updateProfile(u, {
+            displayName: newName
+          });
+        } catch(e) {
+          console.error("Failed to update new user name:", e);
+        }
+      }
+      
+      createApp({
+        state,
+        email: "",
+        password: "",
+        _password: "",
+        status: "",
+        isLogin: true,
+        toggleMethod() {
+          this.isLogin = !this.isLogin;
+        },
+        async handleSubmit() {
+          this.state.disabled = true;
+          this.status = "...";
+          
+          if (this.isLogin) {
+            try {
+              await signInWithEmailAndPassword(auth, this.email, this.password);
+              this.status = "Signed in. Redirecting...";
+            } catch (e) {
+              this.status = e.code.slice(5).split("-").map(w => w[0].toUpperCase() + w.substring(1)).join(" ");
+              console.error("Failed to Sign in:", e);
+              this.state.disabled = false;
+            }
+          } else {
+            if (this.password !== this._password) {
+              this.status = "Passwords don't match.";
+              this.state.disabled = false;
+            } else {
+              try {
+                if (auth.currentUser) {
+                  const credential = EmailAuthProvider.credential(this.email, this.password);
+                  await linkWithCredential(auth.currentUser, credential);
+                } else {
+                  await createUserWithEmailAndPassword(auth, this.email, this.password);
+                }
+
+                if (!auth.currentUser.displayName) {
+                  await setDisplayName();
+                }
+                
+                this.status = "Signed up. Redirecting...";
+                window.location.reload();
+              } catch (e) {
+                this.status = e.code.slice(5).split("-").map(w => w[0].toUpperCase() + w.substring(1)).join(" ");
+                console.error("Failed to Sign up:", e);
+                this.state.disabled = false;
+              }
+            }
+          }
+        }
+      }).mount("#auth");;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/out.css" />
+  </head>
+  <body>
+    <div id="wrapper">
+      <%- components.header.html %>
+      
+      <main class="">
+        <div class="px-8 py-24 flex flex-col justify-center items-center bg-slate-700 text-gray-50">
+          <h1>Shorten URL right away</h1>
+          <span> No need for sign up. </span>
+
+          <%- components.shortener.html %>
+        </div>
+        
+        <div class="px-16 py-4 w-fit mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 place-items-center">
+          <h1 class="sm:col-span-2 md:col-span-4">
+            Features
+          </h1>
+          
+          <div class="flex flex-col gap-1 justify-center items-center">
+            <div class="w-40 relative">
+              <img width="200" height="200" class="w-full h-full" src="images/fast.svg" alt="Fast Vector Of TinyDash URL Shortener">
+            </div>
+            <h3>Blazing Fast</h3>
+            <p class="grow">The site is blazing fast both internally and externally which makes it easy for you to get your hands on.</p>
+          </div>
+          <div class="flex flex-col gap-1 justify-center items-center">
+            <div class="p-4 w-32 relative">
+              <img width="200" height="200" class="w-full h-full" src="images/reliable.svg" alt="Reliablity Vector Of TinyDash URL Shortener">
+            </div>
+            <h3>Totally Reliable</h3>
+            <p class="grow">We stay up for a guaranteed 95% and the links stay shortened for lifetime untill you want it gone.</p>
+          </div>
+          <div class="flex flex-col gap-1 justify-center items-center">
+            <div class="w-40 relative">
+              <img width="200" height="200" class="w-full h-full" src="images/time.svg" alt="Reliablity Vector Of TinyDash URL Shortener">
+            </div>
+            <h3>24/7 Time</h3>
+            <p class="grow">Save your time by using TinyDash and dont sweat with your huge links. We get things done the way you want.</p>
+          </div>
+          <div class="flex flex-col gap-1 justify-center items-center">
+            <div class="w-40 relative">
+              <img width="200" height="200" class="w-full h-full" src="images/admin.svg" alt="Analysis Vector Of TinyDash URL Shortener">
+            </div>
+            <h3>Accurate Analysis</h3>
+            <p class="grow">Shortened URL is tracked to let you know how's the link doing out there in the internet.</p>
+          </div>
+        </div>
+      </main>
+
+      <%- components.footer.html %>
+    </div>
+    
+    <script type="module">
+      import {
+        auth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInAnonymously,
+        db, doc, getDoc, getDocs, query, where, setDoc, deleteDoc, collection
+      } from "./scripts/firebase.js";
+      import { createApp, reactive } from "https://unpkg.com/petite-vue?module";
+
+      const store = reactive({
+        user: {},
+        signed: false,
+        paths: [],
+        disabled: true,
+      });
+      
+      <%- components.header.js %>
+      <%- components.shortener.js %>
+      
+      onAuthStateChanged(auth, async u => {
+        store.disabled = true;
+        
+        if (u) {
+          store.signed = !u.isAnonymous;
+          
+          store.user = {
+            name: u.displayName,
+            email: null
+          };
+        } else {
+          store.signed = false;
+        }
+        
+        await refreshPaths();
+        store.disabled = false;
+      });
+    </script>
+  </body>
+</html>

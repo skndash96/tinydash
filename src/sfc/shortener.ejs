@@ -1,0 +1,136 @@
+<div id="shortener" class="mt-8 max-w-xl">
+  <form @submit.prevent="submit($el)" class="w-fit mx-auto grid gap-2">
+    <input @change="linkChange()" v-model="link" :class="{ 'border-red-400': invalidLink }" class="px-2 py-1 border outline-none bg-transparent" type="text" placeholder="Throw your huge link here." required>
+    
+    <div class="flex gap-2 justify-center items-center">
+      <label class="">
+        tinydash.ml/
+      </label>
+      <input v-model="path" :class="{ 'border-red-400': !path.length }" class="px-2 py-1 border outline-none bg-transparent" type="text" placeholder="custom_domain" required>
+    </div>
+    
+    <button class="px-2 py-1 bg-red-400 disabled:opacity-50" type="submit" :disabled="store.disabled">
+      Shorten
+    </button>
+    
+    <p v-text="status" :class="{'text-green-500': added}" class="text-center"></p>
+  </form>
+  
+  <div v-show="store.paths.length" class="mt-8 m-4 p-4 bg-slate-800/50 rounded-lg" v-cloak>
+    <h2>Your Shortened Links</h2>
+    <p v-show="!store.signed" class="text-xs text-amber-300/75">
+      Caution: Don't clear browser data which will make it impossible for you to access your URLs. [Tinydash ftw - shortened links would still work for life, yeah you're welcome].
+    </p>
+    <ul class="mt-4">
+      <li v-for="item in store.paths" :key="item.path" class="mt-2 flex justify-between items-center">
+        <div class="shrink break-all">
+          <span class="text-gray-300">tinydash.ml/</span>
+          <span class="">{{item.path}}</span>
+        </div>
+        <button @click="deletePath($el, item.path)" class="ml-4 shrink-0 icon text-rose-400 disabled:opacity-50"><%-include("../icons/trash.svg")%></button>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script>
+createApp({
+  store,
+  link: "",
+  path: "",
+  status: null,
+  invalidLink: true,
+  added: false,
+  
+  linkChange() {
+    this.invalidLink = !/^(?:https|http)\:\/\/.+?(?:\.[^/]+)+/.test(this.link);
+  },
+        
+  async submit(el) {
+    const selfPaths = ["404", "login", "signup", "dashboard"];
+    
+    if (this.invalidLink || !this.path.length) {
+      this.status = "Invalid Inputs";
+      return;
+    } else if (selfPaths.includes(this.path)) {
+      this.status = "Path already taken, try something else.";
+      return;
+    }
+          
+    this.store.disabled = true;
+    this.status = "On it...";
+    try {
+      if (!this.store.signed) {
+        await signInAnonymously(auth);
+        await setPersistence(auth, browserLocalPersistence);
+      }
+
+      this.status = "Checking Availablity...";
+
+      const pathRef = doc(db, "paths", this.path);
+      const pathDoc = await getDoc(pathRef);
+
+      if (pathDoc.exists()) this.status = "Path already taken, try something else.";
+      else {
+        this.status = "Creating Short URL...";
+              
+        await setDoc(pathRef, {
+          link: this.link,
+          user_id: auth.currentUser.uid /*not reffered from this coz [think]*/
+        });
+              
+        store.paths.push({ path: this.path, link: this.link });
+          
+        this.status = "Successfully Added";
+        this.added = true;
+        el.reset();
+        setTimeout(() => {
+          this.status = "";
+          this.added = false;
+        }, 1000);
+      }
+    } catch (e) {
+      console.error("Failed to add path:", e);
+      this.status = "Something went wrong. Try again later.";
+    } finally {
+      this.store.disabled = false;
+    }
+  },
+
+  async deletePath(el, path) {
+    el.disabled = true;
+    try {
+      const pathDoc = doc(db, "paths", path);
+      await deleteDoc(pathDoc);
+      this.store.paths.splice(
+        this.store.paths.findIndex(v => v.path === path),
+        1
+      );
+    } catch (e) {
+      console.error("Failed to delete path:", e);
+    } finally {
+      el.disabled = false;
+    }
+  }
+}).mount("#shortener");
+
+async function refreshPaths() {
+  store.paths = [];
+  if (auth.currentUser) {
+    try {
+      const pathsRef = collection(db, "paths");
+      const q = query(pathsRef, where("user_id", "==", auth.currentUser.uid));
+      const docs = await getDocs(q);
+      
+      docs.forEach(doc => {
+        store.paths.push({
+          path: doc.id,
+          ...doc.data()
+        });
+      });
+    } catch(e) {
+      console.error("Failed to fetch user paths:", e);
+    }
+  }
+}
+</script>
